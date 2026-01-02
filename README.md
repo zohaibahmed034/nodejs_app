@@ -20,10 +20,15 @@ This application serves as the backend *Node.js service* that can be containeriz
 
 .
 ├── .gitignore
+
 ├── Dockerfile
+
 ├── buildspec.yaml
+
 ├── index.js
+
 ├── package-lock.json
+
 └── package.json
 
 
