@@ -1,33 +1,29 @@
 version: 0.2
 
-
-
 phases:
-    pre_build:
-      commands:
-        - echo Logging in to Amazon ECR...
-        - aws --version
-        - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 190219743432.dkr.ecr.ap-south-1.amazonaws.com
-        - docker build -t docker_project .
-        - docker tag docker_project:latest 190219743432.dkr.ecr.ap-south-1.amazonaws.com/docker_project:latest
-        - docker push 190219743432.dkr.ecr.ap-south-1.amazonaws.com/docker_project:latest
-    build:
-       commands:
-        - echo Build started on `date`
-        - echo Building the Docker image...
-        - docker build -t $REPOSITORY_URI:latest .
-        - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+  install:
+    runtime-versions:
+      docker: 20
+    commands:
+      - echo Installing dependencies...
+      - yum update -y || true   # optional if using CodeBuild default image
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 190219743432.dkr.ecr.ap-south-1.amazonaws.com
+  build:
+    commands:
+      - echo Building the Docker image...
+      - docker build -t docker_project .
+      - docker tag docker_project:latest 190219743432.dkr.ecr.ap-south-1.amazonaws.com/docker_project:latest
+  post_build:
+    commands:
+      - echo Pushing the Docker image to ECR...
+      - docker push 190219743432.dkr.ecr.ap-south-1.amazonaws.com/docker_project:latest
+      - echo Build and push completed successfully!
 
-    post_build:
-      commands:
-        - echo Build completed on `date`
-        - echo Pushing the Docker images...
-        - docker push $REPOSITORY_URI:latest
-        - docker push $REPOSITORY_URI:$IMAGE_TAG
-        - echo Writing image definitions file...
-        - printf '[{"name":"nodeapp","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
-        - cat imagedefinitions.json
-
-    artifacts:
-      files:
-        - imagedefinitions.json
+# Optionally, if you want to export image info as an artifact
+artifacts:
+  files:
+    - '**/*'
